@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Minimalista</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        #install-btn {
+            display: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>¡Hola, soy una PWA minimalista!</h1>
+    <p>Haz clic abajo para instalarme en tu dispositivo.</p>
+    
+    <!-- Botón de instalación -->
+    <button id="install-btn">Instalar Aplicación</button>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        // Capturar el evento de instalación del navegador
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Evita que el navegador muestre su banner automático
+            deferredPrompt = e;  // Guardamos el evento para usarlo después
+            installBtn.style.display = 'inline-block'; // Mostramos nuestro botón
+        });
+
+        // Cuando el usuario hace clic en el botón
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt(); // Muestra el aviso nativo de instalación
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('El usuario aceptó instalar la PWA');
+            }
+            deferredPrompt = null;
+            installBtn.style.display = 'none'; // Ocultamos el botón tras la acción
+        });
+
+        // Registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker listo'));
+        }
+    </script>
+</body>
+</html>
