@@ -3,57 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Minimalista</title>
+    <title>PumaFood - UNAM</title>
+    <!-- Vinculamos el manifiesto PWA -->
     <link rel="manifest" href="manifest.json">
+    <!-- Tailwind CSS por CDN para un diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        #install-btn {
-            display: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
+        body { background-color: #f8fafc; }
     </style>
 </head>
-<body>
-    <h1>¡Hola, soy una PWA minimalista!</h1>
-    <p>Haz clic abajo para instalarme en tu dispositivo.</p>
-    
-    <!-- Botón de instalación -->
-    <button id="install-btn">Instalar Aplicación</button>
+<body class="text-gray-800 pb-20">
+
+    <!-- Header institucional -->
+    <header class="bg-blue-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            🦁 PumaFood <span class="text-xs bg-amber-500 text-blue-950 px-2 py-0.5 rounded-full font-semibold">CU - UNAM</span>
+        </h1>
+        <button id="install-btn" class="hidden bg-amber-500 hover:bg-amber-400 text-blue-950 text-sm font-bold px-3 py-1.5 rounded-lg transition">
+            Instalar App
+        </button>
+    </header>
+
+    <main class="max-w-md mx-auto p-4">
+        
+        <!-- Selector de Facultad / Zona de entrega -->
+        <section class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-100">
+            <label for="zona-select" class="block text-sm font-semibold text-gray-600 mb-1">📍 ¿A qué facultad te lo llevamos?</label>
+            <select id="zona-select" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900">
+                <option value="Ingeniería">Facultad de Ingeniería</option>
+                <option value="Ciencias">Facultad de Ciencias</option>
+                <option value="Medicina">Facultad de Medicina</option>
+                <option value="Arquitectura">Facultad de Arquitectura</option>
+                <option value="Rectoría">Torre de Rectoría</option>
+            </select>
+        </section>
+
+        <!-- Catálogo de Comida -->
+        <h2 class="text-lg font-bold mb-4 text-blue-950">Antojos disponibles</h2>
+        <div id="catalog" class="space-y-4">
+            
+            <!-- Producto 1 -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900">Torta de Milanesa "Puma"</h3>
+                    <p class="text-sm text-gray-500">Con queso, aguacate y papas.</p>
+                    <span class="text-blue-900 font-bold text-sm">$45.00</span>
+                </div>
+                <button onclick="agregarAlCarrito('Torta de Milanesa Puma', 45)" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition">
+                    + Agregar
+                </button>
+            </div>
+
+            <!-- Producto 2 -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900">Chilaquiles Verdes con Pollo</h3>
+                    <p class="text-sm text-gray-500">Incluye vaso de agua de sabor.</p>
+                    <span class="text-blue-900 font-bold text-sm">$60.00</span>
+                </div>
+                <button onclick="agregarAlCarrito('Chilaquiles Verdes', 60)" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition">
+                    + Agregar
+                </button>
+            </div>
+
+            <!-- Producto 3 -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-900">Café Americano + Concha</h3>
+                    <p class="text-sm text-gray-500">Ideal para el frío de las 7 AM.</p>
+                    <span class="text-blue-900 font-bold text-sm">$30.00</span>
+                </div>
+                <button onclick="agregarAlCarrito('Café + Concha', 30)" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition">
+                    + Agregar
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Sección del Carrito Actual -->
+        <section class="mt-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-lg font-bold mb-2 text-blue-950">🛒 Tu Carrito</h2>
+            <div id="carrito-lista" class="text-sm text-gray-600 mb-4">
+                El carrito está vacío.
+            </div>
+            <div class="flex justify-between font-bold text-gray-900 border-t pt-2 mb-4">
+                <span>Total:</span>
+                <span id="carrito-total">$0.00</span>
+            </div>
+            <button onclick="enviarPedido()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition">
+                Confirmar Pedido
+            </button>
+        </section>
+
+    </main>
 
     <script>
+        // --- 1. LÓGICA DE ALMACENAMIENTO Y CARRITO ---
+        function obtenerCarrito() {
+            const guardado = localStorage.getItem('unam_food_carrito');
+            return guardado ? JSON.parse(guardado) : [];
+        }
+
+        function agregarAlCarrito(nombre, precio) {
+            let carrito = obtenerCarrito();
+            let existente = carrito.find(item => item.nombre === nombre);
+            if (existente) {
+                existente.cantidad += 1;
+            } else {
+                carrito.push({ nombre, precio, cantidad: 1 });
+            }
+            localStorage.setItem('unam_food_carrito', JSON.stringify(carrito));
+            actualizarVistaCarrito();
+        }
+
+        function actualizarVistaCarrito() {
+            let carrito = obtenerCarrito();
+            let contenedor = document.getElementById('carrito-lista');
+            let totalSpan = document.getElementById('carrito-total');
+            
+            if (carrito.length === 0) {
+                contenedor.innerHTML = 'El carrito está vacío.';
+                totalSpan.innerText = '$0.00';
+                return;
+            }
+
+            let html = '<ul class="space-y-2">';
+            let total = 0;
+            carrito.forEach(item => {
+                let subtotal = item.precio * item.cantidad;
+                total += subtotal;
+                html += `<li class="flex justify-between"><span>${item.cantidad}x ${item.nombre}</span> <span>$${subtotal}</span></li>`;
+            });
+            html += '</ul>';
+            contenedor.innerHTML = html;
+            totalSpan.innerText = `$${total.toFixed(2)}`;
+        }
+
+        // Guardar zona seleccionada
+        const zonaSelect = document.getElementById('zona-select');
+        zonaSelect.addEventListener('change', (e) => {
+            localStorage.setItem('unam_food_zona', e.target.value);
+        });
+
+        // Cargar zona guardada previamente si existe
+        window.addEventListener('DOMContentLoaded', () => {
+            let zonaGuardada = localStorage.getItem('unam_food_zona');
+            if (zonaGuardada) zonaSelect.value = zonaGuardada;
+            actualizarVistaCarrito();
+        });
+
+        function enviarPedido() {
+            let carrito = obtenerCarrito();
+            let zona = zonaSelect.value;
+            if (carrito.length === 0) {
+                alert('¡Agrega algo al carrito primero!');
+                return;
+            }
+            alert(`¡Pedido realizado con éxito! Será entregado en la ${zona}.`);
+            localStorage.removeItem('unam_food_carrito');
+            actualizarVistaCarrito();
+        }
+
+        // --- 2. BOTÓN DE INSTALACIÓN PWA ---
         let deferredPrompt;
         const installBtn = document.getElementById('install-btn');
 
-        // Capturar el evento de instalación del navegador
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Evita que el navegador muestre su banner automático
-            deferredPrompt = e;  // Guardamos el evento para usarlo después
-            installBtn.style.display = 'inline-block'; // Mostramos nuestro botón
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('hidden');
         });
 
-        // Cuando el usuario hace clic en el botón
         installBtn.addEventListener('click', async () => {
             if (!deferredPrompt) return;
-            deferredPrompt.prompt(); // Muestra el aviso nativo de instalación
+            deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
-                console.log('El usuario aceptó instalar la PWA');
+                installBtn.classList.add('hidden');
             }
             deferredPrompt = null;
-            installBtn.style.display = 'none'; // Ocultamos el botón tras la acción
         });
 
-        // Registrar el Service Worker
+        // --- 3. REGISTRO SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker listo'));
+                .then(() => console.log('Service Worker activo'));
         }
     </script>
 </body>
